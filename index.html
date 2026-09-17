@@ -1,0 +1,1190 @@
+<!DOCTYPE html>
+<html lang="id">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>FAMILY 100 PAI-BP</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;700;900&display=swap" rel="stylesheet">
+    
+    <style>
+        body {
+            font-family: 'Inter', sans-serif;
+            background: radial-gradient(circle, #1e3a8a 0%, #0f172a 100%);
+            color: white;
+            overflow-x: hidden;
+            user-select: none;
+        }
+
+        .text-shadow { text-shadow: 2px 2px 4px rgba(0,0,0,0.7); }
+        .text-glow { text-shadow: 0 0 10px rgba(250, 204, 21, 0.8), 0 0 20px rgba(250, 204, 21, 0.5); }
+        
+        .glass-panel {
+            background: rgba(255, 255, 255, 0.1);
+            backdrop-filter: blur(10px);
+            border: 1px solid rgba(255, 255, 255, 0.2);
+            box-shadow: 0 8px 32px 0 rgba(0, 0, 0, 0.37);
+        }
+
+        /* Card Flip Animation */
+        .card-container {
+            perspective: 1000px;
+            height: 80px;
+            width: 100%;
+        }
+        .card-inner {
+            position: relative;
+            width: 100%;
+            height: 100%;
+            text-align: center;
+            transition: transform 0.6s cubic-bezier(0.4, 0.2, 0.2, 1);
+            transform-style: preserve-3d;
+            box-shadow: 0 4px 8px 0 rgba(0,0,0,0.5);
+            border-radius: 0.5rem;
+        }
+        .card-container.revealed .card-inner { transform: rotateX(180deg); }
+        .card-front, .card-back {
+            position: absolute;
+            width: 100%;
+            height: 100%;
+            backface-visibility: hidden;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            border-radius: 0.5rem;
+            border: 2px solid #3b82f6;
+        }
+        .card-front {
+            background: linear-gradient(145deg, #1e3a8a, #172554);
+            color: #60a5fa;
+            font-size: 2rem;
+            font-weight: 900;
+        }
+        .card-back {
+            background: linear-gradient(145deg, #047857, #064e3b);
+            color: white;
+            transform: rotateX(180deg);
+            border-color: #34d399;
+            padding: 0 10px;
+        }
+        .ans-text { flex-grow: 1; text-align: left; font-size: 1.25rem; font-weight: 700; text-transform: uppercase; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+        .ans-points { background: #059669; padding: 5px 15px; border-radius: 4px; font-weight: 900; font-size: 1.5rem; border-left: 2px solid #34d399; margin-left: 10px; }
+
+        /* Strike Animation */
+        .strike-container {
+            position: fixed;
+            top: 50%;
+            left: 50%;
+            transform: translate(-50%, -50%) scale(0);
+            z-index: 50;
+            display: flex;
+            gap: 20px;
+            transition: transform 0.3s cubic-bezier(0.175, 0.885, 0.32, 1.275);
+            pointer-events: none;
+        }
+        .strike-container.show { transform: translate(-50%, -50%) scale(1); }
+        .strike-mark {
+            color: #ef4444;
+            font-size: 15rem;
+            font-weight: 900;
+            text-shadow: 0 0 20px black, 0 0 40px red;
+            line-height: 1;
+        }
+        
+        .shake { animation: shake 0.5s; }
+        @keyframes shake {
+            0% { transform: translate(1px, 1px) rotate(0deg); }
+            10% { transform: translate(-1px, -2px) rotate(-1deg); }
+            20% { transform: translate(-3px, 0px) rotate(1deg); }
+            30% { transform: translate(3px, 2px) rotate(0deg); }
+            40% { transform: translate(1px, -1px) rotate(1deg); }
+            50% { transform: translate(-1px, 2px) rotate(-1deg); }
+            60% { transform: translate(-3px, 1px) rotate(0deg); }
+            70% { transform: translate(3px, 1px) rotate(-1deg); }
+            80% { transform: translate(-1px, -1px) rotate(1deg); }
+            90% { transform: translate(1px, 2px) rotate(0deg); }
+            100% { transform: translate(1px, -2px) rotate(-1deg); }
+        }
+
+        .btn { transition: all 0.2s; }
+        .btn:active { transform: scale(0.95); }
+        
+        /* Modal */
+        .modal { display: none; position: fixed; top: 0; left: 0; width: 100%; height: 100%; background: rgba(0,0,0,0.8); z-index: 100; justify-content: center; align-items: center; }
+        .modal.active { display: flex; }
+
+        input, select, textarea { color: black; }
+    </style>
+</head>
+<body class="min-h-screen flex flex-col">
+
+    <div class="fixed top-4 right-4 z-50 flex gap-2">
+        <button id="btn-audio" onclick="toggleAudio()" class="glass-panel p-2 rounded-full hover:bg-white/20 transition" title="Toggle Audio">
+            🔊
+        </button>
+        <button onclick="toggleFullscreen()" class="glass-panel p-2 rounded-full hover:bg-white/20 transition" title="Fullscreen">
+            ⛶
+        </button>
+    </div>
+
+    <!-- MAIN MENU -->
+    <div id="screen-main" class="flex-grow flex flex-col items-center justify-center p-4">
+        <div class="text-center mb-12">
+            <h1 class="text-7xl md:text-9xl font-black text-yellow-400 text-glow mb-2 tracking-tighter">FAMILY 100</h1>
+            <h2 class="text-4xl md:text-5xl font-bold text-white text-shadow tracking-widest">PAI-BP SMA</h2>
+            <p class="text-xl md:text-2xl mt-4 text-blue-200 italic">Bermain • Berpikir • Belajar</p>
+        </div>
+        <div class="flex flex-col gap-4 w-full max-w-md">
+            <button onclick="showScreen('screen-setup')" class="btn bg-gradient-to-r from-green-500 to-green-700 hover:from-green-400 hover:to-green-600 text-white font-bold py-4 px-8 rounded-xl text-2xl shadow-lg border-2 border-green-400">
+                ▶ MULAI PERMAINAN
+            </button>
+            <button onclick="showScreen('screen-manage')" class="btn bg-gradient-to-r from-blue-600 to-blue-800 hover:from-blue-500 hover:to-blue-700 text-white font-bold py-3 px-8 rounded-xl text-xl shadow-lg border-2 border-blue-400">
+                ⚙ KELOLA SOAL
+            </button>
+            <button onclick="openModal('modal-help')" class="btn glass-panel hover:bg-white/20 text-white font-bold py-3 px-8 rounded-xl text-xl shadow-lg">
+                📖 PETUNJUK
+            </button>
+        </div>
+    </div>
+
+    <!-- SETUP SCREEN -->
+    <div id="screen-setup" class="hidden flex-grow flex-col items-center justify-center p-4">
+        <div class="glass-panel p-8 rounded-2xl w-full max-w-4xl">
+            <h2 class="text-4xl font-bold text-center mb-8 text-yellow-400">PENGATURAN PERMAINAN</h2>
+            
+            <div class="grid grid-cols-1 md:grid-cols-2 gap-8 mb-8">
+                <div>
+                    <label class="block text-xl font-bold mb-2">Nama TIM A</label>
+                    <input type="text" id="input-team-a" value="AL-FARUQ" class="w-full p-3 rounded-lg text-2xl font-bold text-center border-4 border-red-500 bg-red-50 text-red-900 uppercase">
+                </div>
+                <div>
+                    <label class="block text-xl font-bold mb-2">Nama TIM B</label>
+                    <input type="text" id="input-team-b" value="AL-KHAWARIZMI" class="w-full p-3 rounded-lg text-2xl font-bold text-center border-4 border-blue-500 bg-blue-50 text-blue-900 uppercase">
+                </div>
+            </div>
+
+            <div class="mb-8">
+                <label class="block text-xl font-bold mb-2">Pilih Babak & Pengali Nilai</label>
+                <select id="select-multiplier" class="w-full p-3 rounded-lg text-xl font-bold bg-gray-800 text-white border-2 border-gray-600">
+                    <option value="1">RONDE 1 (Nilai Normal / ×1)</option>
+                    <option value="2">RONDE 2 (Nilai ×2)</option>
+                    <option value="3">RONDE 3 (Nilai ×3)</option>
+                </select>
+            </div>
+
+            <div class="mb-8">
+                <label class="block text-xl font-bold mb-2">Pilih Pertanyaan</label>
+                <select id="select-question" class="w-full p-3 rounded-lg text-lg bg-gray-800 text-white border-2 border-gray-600">
+                    <!-- Populated by JS -->
+                </select>
+            </div>
+
+            <div class="flex justify-between mt-8">
+                <button onclick="showScreen('screen-main')" class="btn bg-gray-600 hover:bg-gray-500 text-white font-bold py-3 px-8 rounded-xl text-xl">
+                    KEMBALI
+                </button>
+                <button onclick="startGame()" class="btn bg-yellow-500 hover:bg-yellow-400 text-black font-black py-3 px-8 rounded-xl text-2xl shadow-lg shadow-yellow-500/50">
+                    SIAAP... MULAII!
+                </button>
+            </div>
+        </div>
+    </div>
+
+    <!-- MAIN GAME SCREEN -->
+    <div id="screen-game" class="hidden flex-grow flex-col relative">
+        
+        <!-- Top Bar: Scores & Timer -->
+        <div class="flex justify-between items-center p-4 bg-black/40 border-b border-white/10">
+            <!-- Team A -->
+            <div class="flex-1 flex justify-start items-center gap-4">
+                <div class="bg-red-600 border-4 border-red-400 rounded-xl p-2 min-w-[200px] text-center shadow-[0_0_15px_rgba(220,38,38,0.5)]">
+                    <div id="display-team-a-name" class="text-xl font-bold uppercase truncate">TIM A</div>
+                    <div id="display-score-a" class="text-5xl font-black text-white">0</div>
+                </div>
+                <div class="flex gap-2">
+                    <button onclick="adjustScore('A', 10)" class="btn bg-gray-700 p-2 rounded hover:bg-gray-600 text-sm" title="Tambah 10 Poin">+10</button>
+                    <button onclick="adjustScore('A', -10)" class="btn bg-gray-700 p-2 rounded hover:bg-gray-600 text-sm" title="Kurangi 10 Poin">-10</button>
+                </div>
+            </div>
+
+            <!-- Central Info -->
+            <div class="flex-1 flex flex-col items-center justify-center">
+                <div id="display-round-info" class="text-2xl font-bold text-yellow-400 text-glow">RONDE 1 (×1)</div>
+                <div class="glass-panel rounded-full px-6 py-2 mt-2 flex items-center gap-4 border-2 border-yellow-400 shadow-[0_0_15px_rgba(250,204,21,0.5)]">
+                    <span class="text-xl">⏱</span>
+                    <span id="timer-display" class="text-4xl font-black tabular-nums">00:30</span>
+                </div>
+                <div class="flex gap-2 mt-2">
+                    <button onclick="startTimer()" class="btn bg-green-600 px-3 py-1 rounded hover:bg-green-500 text-sm font-bold">▶</button>
+                    <button onclick="pauseTimer()" class="btn bg-yellow-600 px-3 py-1 rounded hover:bg-yellow-500 text-sm font-bold">⏸</button>
+                    <button onclick="resetTimer()" class="btn bg-red-600 px-3 py-1 rounded hover:bg-red-500 text-sm font-bold">↻</button>
+                    <select id="timer-setting" onchange="resetTimer()" class="bg-gray-800 text-white text-sm p-1 rounded border border-gray-600">
+                        <option value="15">15s</option>
+                        <option value="30" selected>30s</option>
+                        <option value="45">45s</option>
+                        <option value="60">60s</option>
+                    </select>
+                </div>
+            </div>
+
+            <!-- Team B -->
+            <div class="flex-1 flex justify-end items-center gap-4">
+                <div class="flex gap-2">
+                    <button onclick="adjustScore('B', 10)" class="btn bg-gray-700 p-2 rounded hover:bg-gray-600 text-sm" title="Tambah 10 Poin">+10</button>
+                    <button onclick="adjustScore('B', -10)" class="btn bg-gray-700 p-2 rounded hover:bg-gray-600 text-sm" title="Kurangi 10 Poin">-10</button>
+                </div>
+                <div class="bg-blue-600 border-4 border-blue-400 rounded-xl p-2 min-w-[200px] text-center shadow-[0_0_15px_rgba(37,99,235,0.5)]">
+                    <div id="display-team-b-name" class="text-xl font-bold uppercase truncate">TIM B</div>
+                    <div id="display-score-b" class="text-5xl font-black text-white">0</div>
+                </div>
+            </div>
+        </div>
+
+        <!-- Current Round Accumulated Points -->
+        <div class="text-center mt-4">
+             <div class="inline-block glass-panel px-8 py-2 rounded-full border-2 border-white/20">
+                 <span class="text-lg font-bold text-gray-300 uppercase">Poin Terkumpul Ronde Ini: </span>
+                 <span id="round-points" class="text-3xl font-black text-yellow-400 ml-2">0</span>
+             </div>
+        </div>
+
+        <!-- Question Area -->
+        <div class="w-full max-w-5xl mx-auto mt-4 p-4 text-center">
+            <h2 id="display-question" class="text-3xl md:text-4xl font-bold text-white text-shadow leading-tight bg-black/50 p-6 rounded-2xl border border-white/10 shadow-2xl">
+                Pertanyaan akan muncul di sini...
+            </h2>
+        </div>
+
+        <!-- Answers Board Grid -->
+        <div class="w-full max-w-5xl mx-auto flex-grow flex items-center justify-center p-4">
+            <div id="answers-board" class="w-full grid grid-cols-1 md:grid-cols-2 gap-4">
+                <!-- Cards injected via JS -->
+            </div>
+        </div>
+
+        <!-- Controls (Bottom) -->
+        <div class="w-full bg-black/60 border-t border-white/10 p-4 pb-6 mt-auto">
+            <div class="max-w-6xl mx-auto flex flex-col md:flex-row gap-4 items-center">
+                
+                <!-- Input Area -->
+                <div class="flex-grow flex w-full">
+                    <input type="text" id="answer-input" placeholder="Ketik jawaban siswa... (Tekan Enter)" class="w-full p-4 rounded-l-xl text-2xl font-bold text-black border-4 border-r-0 border-blue-500 focus:outline-none focus:bg-blue-50">
+                    <button onclick="checkAnswer()" class="btn bg-blue-600 hover:bg-blue-500 text-white font-bold py-4 px-6 text-xl border-4 border-l-0 border-blue-500 border-l-black">CEK</button>
+                    <button onclick="triggerStrike()" class="btn bg-red-600 hover:bg-red-500 text-white font-black py-4 px-6 rounded-r-xl text-2xl border-4 border-l-0 border-red-700 ml-1 shadow-[0_0_10px_red]">✖ (X)</button>
+                </div>
+
+                <!-- Manual Controls -->
+                <div class="flex gap-2 w-full md:w-auto justify-center">
+                    <button onclick="openModal('modal-manual-correct')" class="btn glass-panel border border-green-500 hover:bg-green-500/20 text-green-400 font-bold py-3 px-4 rounded-xl text-sm whitespace-nowrap">
+                        ✓ BENAR MANUAL
+                    </button>
+                    
+                    <div id="steal-controls" class="hidden flex gap-2">
+                        <button onclick="awardRoundPoints('A')" class="btn bg-red-600 hover:bg-red-500 text-white font-bold py-3 px-4 rounded-xl border-2 border-red-400 shadow-[0_0_10px_red]">
+                            BERIKAN POIN KE A
+                        </button>
+                        <button onclick="awardRoundPoints('B')" class="btn bg-blue-600 hover:bg-blue-500 text-white font-bold py-3 px-4 rounded-xl border-2 border-blue-400 shadow-[0_0_10px_blue]">
+                            BERIKAN POIN KE B
+                        </button>
+                    </div>
+                </div>
+
+                <!-- Game Flow Controls -->
+                <div class="flex gap-2 w-full md:w-auto justify-center">
+                    <button onclick="showScreen('screen-setup')" class="btn bg-gray-700 hover:bg-gray-600 text-white font-bold py-3 px-4 rounded-xl text-sm whitespace-nowrap border border-gray-500">
+                        ☰ GANTI SOAL
+                    </button>
+                    <button onclick="endGame()" class="btn bg-gradient-to-r from-yellow-600 to-yellow-800 hover:from-yellow-500 hover:to-yellow-700 text-white font-bold py-3 px-4 rounded-xl text-sm whitespace-nowrap border border-yellow-400">
+                        🏆 SELESAI
+                    </button>
+                </div>
+            </div>
+            <div class="text-center mt-2 text-gray-400 text-sm">
+                Shortcut: [Enter] Cek Jawaban | [X] Strike | [Spasi] Play/Pause Waktu | [1-8] Buka Manual
+            </div>
+        </div>
+
+        <!-- Strike Overlay -->
+        <div id="strike-overlay" class="strike-container">
+            <!-- Strikes injected via JS -->
+        </div>
+        <div id="steal-overlay" class="hidden absolute top-0 left-0 w-full h-full bg-black/80 z-40 flex-col items-center justify-center">
+            <h1 class="text-7xl font-black text-red-500 text-glow mb-8 shake">3 STRIKE!</h1>
+            <h2 class="text-5xl font-bold text-yellow-400 mb-8">WAKTUNYA REBUTAN</h2>
+            <p class="text-2xl text-white">Tim lawan berhak menjawab satu kali. Jika benar, poin ronde ini milik mereka.</p>
+            <button onclick="closeStealOverlay()" class="mt-8 btn bg-blue-600 py-3 px-8 rounded-xl font-bold text-xl">LANJUTKAN</button>
+        </div>
+    </div>
+
+    <!-- MANAGE QUESTIONS SCREEN -->
+    <div id="screen-manage" class="hidden flex-grow flex-col p-8 overflow-y-auto">
+        <div class="max-w-6xl mx-auto w-full glass-panel rounded-2xl p-6">
+            <div class="flex justify-between items-center mb-6">
+                <h2 class="text-3xl font-bold text-yellow-400">⚙ Kelola Bank Soal</h2>
+                <div class="flex gap-2">
+                    <button onclick="exportQuestions()" class="btn bg-blue-600 hover:bg-blue-500 px-4 py-2 rounded font-bold text-sm">📤 Export JSON</button>
+                    <button onclick="document.getElementById('import-file').click()" class="btn bg-green-600 hover:bg-green-500 px-4 py-2 rounded font-bold text-sm">📥 Import JSON</button>
+                    <input type="file" id="import-file" class="hidden" accept=".json" onchange="importQuestions(event)">
+                    <button onclick="resetDefaultQuestions()" class="btn bg-red-600 hover:bg-red-500 px-4 py-2 rounded font-bold text-sm">↻ Reset Default</button>
+                    <button onclick="showScreen('screen-main')" class="btn bg-gray-600 hover:bg-gray-500 px-4 py-2 rounded font-bold text-sm">Kembali</button>
+                </div>
+            </div>
+
+            <div class="grid grid-cols-1 lg:grid-cols-3 gap-6">
+                <!-- List of questions -->
+                <div class="lg:col-span-1 bg-black/40 rounded-xl p-4 border border-white/10 h-[600px] overflow-y-auto">
+                    <button onclick="createNewQuestion()" class="w-full btn bg-green-600 hover:bg-green-500 py-3 rounded-lg font-bold mb-4">+ TAMBAH SOAL BARU</button>
+                    <div id="question-list" class="flex flex-col gap-2">
+                        <!-- Populated by JS -->
+                    </div>
+                </div>
+                
+                <!-- Editor -->
+                <div class="lg:col-span-2 bg-black/40 rounded-xl p-4 border border-white/10 h-[600px] overflow-y-auto">
+                    <div id="editor-empty" class="h-full flex items-center justify-center text-gray-400 italic">
+                        Pilih soal dari daftar di kiri atau tambah soal baru.
+                    </div>
+                    <div id="editor-form" class="hidden flex flex-col gap-4">
+                        <input type="hidden" id="edit-id">
+                        <div>
+                            <label class="block font-bold mb-1 text-sm text-gray-300">Pertanyaan</label>
+                            <textarea id="edit-question" rows="3" class="w-full p-2 rounded bg-gray-100 text-black font-bold"></textarea>
+                        </div>
+                        <div>
+                            <label class="block font-bold mb-1 text-sm text-gray-300">Kategori (Opsional)</label>
+                            <input type="text" id="edit-category" class="w-full p-2 rounded bg-gray-100 text-black">
+                        </div>
+                        
+                        <div class="flex justify-between items-end border-b border-gray-600 pb-2 mt-4">
+                            <h3 class="font-bold text-yellow-400">Daftar Jawaban (Max 8)</h3>
+                            <button onclick="addAnswerRow()" class="btn bg-blue-600 hover:bg-blue-500 px-3 py-1 rounded text-sm">+ Tambah Jawaban</button>
+                        </div>
+                        
+                        <div id="answers-editor-list" class="flex flex-col gap-3">
+                            <!-- Answer rows populated by JS -->
+                        </div>
+
+                        <div class="flex justify-end gap-2 mt-6 pt-4 border-t border-gray-600">
+                            <button onclick="deleteCurrentQuestion()" class="btn bg-red-600 hover:bg-red-500 px-6 py-2 rounded font-bold">Hapus Soal</button>
+                            <button onclick="saveQuestion()" class="btn bg-green-600 hover:bg-green-500 px-6 py-2 rounded font-bold">Simpan Soal</button>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- MODALS -->
+    <!-- Help Modal -->
+    <div id="modal-help" class="modal">
+        <div class="bg-slate-800 p-8 rounded-2xl max-w-2xl w-full border-2 border-slate-600 shadow-2xl relative">
+            <h2 class="text-3xl font-bold text-yellow-400 mb-4 border-b border-slate-600 pb-2">CARA BERMAIN</h2>
+            <div class="text-lg space-y-3 max-h-[60vh] overflow-y-auto pr-2">
+                <p>1. Hubungkan laptop ke proyektor. Pastikan suara laptop aktif (klik tombol 🔊 di pojok kanan atas untuk izinkan audio).</p>
+                <p>2. Klik <b>Mulai Permainan</b>. Masukkan nama Tim A dan Tim B.</p>
+                <p>3. Pilih Ronde (untuk pengali poin) dan pilih pertanyaan, lalu klik <b>SIAAP... MULAII!</b></p>
+                <p>4. Bacakan pertanyaan di layar. Saat siswa menjawab, ketik jawaban di kotak input bawah dan tekan <b>Enter</b> (atau klik CEK).</p>
+                <p>5. Jika sistem mendeteksi kemiripan kata, kartu akan terbuka otomatis dan poin bertambah.</p>
+                <p>6. Jika siswa menjawab dengan kata yang maknanya sama tapi tidak terdeteksi sistem, gunakan tombol <b>✓ BENAR MANUAL</b> (atau tekan tombol angka 1-8 di keyboard).</p>
+                <p>7. Jika jawaban salah, tekan tombol <b>✖ (X)</b> merah (atau tekan X di keyboard) untuk memberikan Strike.</p>
+                <p>8. Setelah <b>3 Strike</b>, layar akan menampilkan mode <b>REBUTAN</b>. Beri kesempatan tim lawan menjawab satu kali.</p>
+                <p>9. Setelah rebutan terjawab benar/salah, berikan poin ronde tersebut ke tim yang berhak menggunakan tombol <b>BERIKAN POIN KE A/B</b> yang muncul di bawah.</p>
+                <p>10. Klik <b>GANTI SOAL</b> untuk lanjut ronde berikutnya, atau <b>SELESAI</b> untuk melihat pemenang akhir.</p>
+            </div>
+            <button onclick="closeModal('modal-help')" class="mt-6 w-full btn bg-blue-600 hover:bg-blue-500 py-3 rounded-xl font-bold text-xl">TUTUP</button>
+        </div>
+    </div>
+
+    <!-- Manual Correct Modal -->
+    <div id="modal-manual-correct" class="modal">
+        <div class="bg-slate-800 p-8 rounded-2xl max-w-md w-full border-2 border-green-500 shadow-[0_0_20px_rgba(34,197,94,0.3)]">
+            <h2 class="text-2xl font-bold text-green-400 mb-4 text-center">BUKA JAWABAN MANUAL</h2>
+            <p class="text-center text-sm text-gray-300 mb-4">Pilih nomor jawaban yang ingin dibuka (jika jawaban siswa benar namun tidak terdeteksi sistem).</p>
+            <div id="manual-correct-buttons" class="grid grid-cols-2 gap-3">
+                <!-- Injected via JS -->
+            </div>
+            <button onclick="closeModal('modal-manual-correct')" class="mt-6 w-full btn bg-gray-600 hover:bg-gray-500 py-2 rounded-lg font-bold">Batal</button>
+        </div>
+    </div>
+
+    <!-- Winner Modal -->
+    <div id="modal-winner" class="modal">
+        <div class="bg-gradient-to-b from-yellow-600 to-yellow-900 p-8 rounded-3xl max-w-3xl w-full border-4 border-yellow-300 shadow-[0_0_50px_rgba(250,204,21,0.5)] text-center relative overflow-hidden">
+            <div class="absolute top-0 left-0 w-full h-full flex justify-center items-center opacity-20 pointer-events-none">
+                <span class="text-[20rem]">🏆</span>
+            </div>
+            <h2 class="text-5xl font-black text-white text-shadow mb-2 relative z-10">SELAMAT!</h2>
+            <h3 class="text-2xl font-bold text-yellow-200 mb-8 relative z-10">PERMAINAN SELESAI</h3>
+            
+            <div class="flex justify-center items-end gap-8 mb-10 relative z-10">
+                <div id="winner-runnerup" class="flex flex-col items-center opacity-80 scale-90">
+                    <div class="text-xl font-bold mb-2 truncate max-w-[200px]" id="runnerup-name">TIM</div>
+                    <div class="bg-black/50 p-4 rounded-xl border-2 border-gray-400">
+                        <div class="text-3xl font-black text-gray-300" id="runnerup-score">0</div>
+                    </div>
+                </div>
+                
+                <div id="winner-champ" class="flex flex-col items-center transform -translate-y-4">
+                    <div class="text-3xl font-black mb-2 text-yellow-300 text-glow uppercase truncate max-w-[300px]" id="champ-name">TIM</div>
+                    <div class="bg-black/50 p-6 rounded-2xl border-4 border-yellow-400 shadow-[0_0_30px_rgba(250,204,21,0.8)]">
+                        <div class="text-7xl font-black text-white" id="champ-score">0</div>
+                    </div>
+                    <div class="mt-4 text-5xl">👑</div>
+                </div>
+            </div>
+
+            <div class="relative z-10 flex justify-center gap-4">
+                <button onclick="resetFullGame()" class="btn bg-green-600 hover:bg-green-500 text-white py-3 px-8 rounded-xl font-bold text-xl border-2 border-green-400">MULAI GAME BARU</button>
+                <button onclick="showScreen('screen-main'); closeModal('modal-winner')" class="btn bg-gray-800 hover:bg-gray-700 text-white py-3 px-8 rounded-xl font-bold text-xl border-2 border-gray-500">MENU UTAMA</button>
+            </div>
+        </div>
+    </div>
+
+    <script>
+        // --- 1. DEFAULT DATA (10 Soal PAI-BP) ---
+        const defaultQuestions = [
+            { id: "q1", category: "Akhlak", question: "Sebutkan contoh perilaku yang menunjukkan rasa syukur kepada Allah!", answers: [
+                { text: "Rajin Beribadah", points: 35, aliases: ["ibadah", "shalat", "salat", "rajin sholat", "taat", "ngaji", "baca quran"] },
+                { text: "Mengucap Hamdalah", points: 28, aliases: ["alhamdulillah", "ucap alhamdulillah", "berdzikir", "zikir"] },
+                { text: "Sedekah / Berbagi", points: 20, aliases: ["infaq", "membantu orang", "kasih uang", "zakat"] },
+                { text: "Menjaga Kesehatan", points: 10, aliases: ["merawat tubuh", "makan halal", "olahraga"] },
+                { text: "Tidak Mengeluh", points: 7, aliases: ["sabar", "ikhlas", "nerima"] }
+            ]},
+            { id: "q2", category: "Akhlak", question: "Sebutkan hal yang dapat membuat seseorang sulit bersyukur!", answers: [
+                { text: "Sombong / Takabur", points: 30, aliases: ["merasa hebat", "angkuh", "riya"] },
+                { text: "Iri Hati / Hasad", points: 25, aliases: ["dengki", "cemburu", "tidak suka melihat orang senang"] },
+                { text: "Cinta Dunia", points: 20, aliases: ["hubbud dunya", "serakah", "rakus", "tamak", "materialistis"] },
+                { text: "Kurang Iman", points: 15, aliases: ["jauh dari agama", "tidak shalat", "lupa allah"] },
+                { text: "Sering Membandingkan", points: 10, aliases: ["melihat ke atas", "melihat orang kaya", "insecure"] }
+            ]},
+            { id: "q3", category: "Akhlak", question: "Sebutkan contoh perilaku menjaga lisan!", answers: [
+                { text: "Tidak Berbohong", points: 32, aliases: ["jujur", "berkata benar", "tidak dusta"] },
+                { text: "Tidak Bergosip", points: 28, aliases: ["tidak ghibah", "tidak membicarakan orang", "tidak fitnah"] },
+                { text: "Berkata Sopan", points: 20, aliases: ["ramah", "lembut", "santun", "tidak kasar"] },
+                { text: "Banyak Berdzikir", points: 12, aliases: ["baca alquran", "istighfar", "sholawat"] },
+                { text: "Diam Jika Tidak Perlu", points: 8, aliases: ["tidak banyak omong", "jaga omongan", "tidak cerewet"] }
+            ]},
+            { id: "q4", category: "Akhlak", question: "Apa saja akibat jika seseorang mengingkari janji?", answers: [
+                { text: "Kehilangan Kepercayaan", points: 35, aliases: ["tidak dipercaya", "dicap pembohong", "orang tidak percaya"] },
+                { text: "Mendapat Dosa", points: 25, aliases: ["masuk neraka", "dimurkai allah", "azab"] },
+                { text: "Tanda Kemunafikan", points: 20, aliases: ["ciri orang munafik", "munafik"] },
+                { text: "Dijauhi Teman", points: 15, aliases: ["tidak punya teman", "dibenci orang", "dikucilkan"] },
+                { text: "Hati Gelisah", points: 5, aliases: ["tidak tenang", "merasa bersalah"] }
+            ]},
+            { id: "q5", category: "Akhlak", question: "Sebutkan contoh perilaku hidup sederhana (tidak berfoya-foya) pada siswa!", answers: [
+                { text: "Menabung Uang Saku", points: 30, aliases: ["simpan uang", "celengan", "tidak jajan semua"] },
+                { text: "Membawa Bekal", points: 25, aliases: ["bawa makanan dari rumah", "bawa minum"] },
+                { text: "Membeli Sesuai Kebutuhan", points: 20, aliases: ["tidak boros", "beli yang penting", "tidak ikut ikutan"] },
+                { text: "Merawat Barang Milik", points: 15, aliases: ["jaga sepatu", "jaga tas", "tidak cepat ganti baru", "pakai yang lama"] },
+                { text: "Berbagi dengan Teman", points: 10, aliases: ["traktir teman", "sedekah", "bantu teman"] }
+            ]},
+            { id: "q6", category: "Sejarah", question: "Sebutkan sifat wajib bagi Rasul (Nabi)!", answers: [
+                { text: "Siddiq (Benar)", points: 30, aliases: ["benar", "jujur"] },
+                { text: "Amanah (Dapat Dipercaya)", points: 28, aliases: ["dipercaya", "terpercaya"] },
+                { text: "Tabligh (Menyampaikan)", points: 25, aliases: ["menyampaikan", "wahyu"] },
+                { text: "Fathanah (Cerdas)", points: 17, aliases: ["cerdas", "pintar", "bijaksana"] }
+            ]},
+            { id: "q7", category: "Fiqih", question: "Sebutkan golongan orang yang berhak menerima Zakat (Mustahiq)!", answers: [
+                { text: "Fakir", points: 25, aliases: ["orang fakir", "sangat miskin"] },
+                { text: "Miskin", points: 20, aliases: ["orang miskin", "kurang mampu"] },
+                { text: "Amil (Panitia)", points: 15, aliases: ["pengurus zakat", "panitia zakat"] },
+                { text: "Muallaf", points: 15, aliases: ["orang baru masuk islam", "baru islam"] },
+                { text: "Gharim (Berhutang)", points: 10, aliases: ["orang berhutang", "punya hutang"] },
+                { text: "Ibnu Sabil (Musafir)", points: 10, aliases: ["musafir", "sedang perjalanan"] },
+                { text: "Fi Sabilillah", points: 5, aliases: ["berjuang di jalan allah", "pejuang"] }
+            ]},
+            { id: "q8", category: "Al-Quran", question: "Sebutkan adab ketika membaca Al-Qur'an!", answers: [
+                { text: "Suci / Berwudhu", points: 35, aliases: ["wudhu", "bersih", "punya wudhu"] },
+                { text: "Menutup Aurat", points: 20, aliases: ["pakai jilbab", "pakaian sopan", "pakai peci"] },
+                { text: "Menghadap Kiblat", points: 18, aliases: ["arah kiblat", "hadap kabah"] },
+                { text: "Membaca Ta'awudz", points: 15, aliases: ["audzubillah", "doa sebelum baca"] },
+                { text: "Tartil / Tajwid Benar", points: 12, aliases: ["pelan pelan", "jelas", "suara bagus"] }
+            ]},
+            { id: "q9", category: "Karakter", question: "Sebutkan contoh penerapan etos kerja (kerja keras) sebagai seorang pelajar!", answers: [
+                { text: "Rajin Belajar", points: 35, aliases: ["belajar giat", "tekun", "baca buku"] },
+                { text: "Mengerjakan Tugas Tepat Waktu", points: 25, aliases: ["tidak menunda PR", "kumpul tugas", "disiplin"] },
+                { text: "Pantang Menyerah", points: 15, aliases: ["tidak putus asa", "mencoba lagi", "tanya guru kalau tidak tahu"] },
+                { text: "Jujur Saat Ujian", points: 15, aliases: ["tidak menyontek", "percaya diri", "kerja sendiri"] },
+                { text: "Aktif di Kelas", points: 10, aliases: ["bertanya", "menjawab", "diskusi"] }
+            ]},
+            { id: "q10", category: "Kontemporer", question: "Sebutkan contoh penggunaan teknologi yang bermanfaat dalam kehidupan seorang muslim!", answers: [
+                { text: "Aplikasi Al-Qur'an / Waktu Shalat", points: 30, aliases: ["baca quran di hp", "jadwal shalat", "alarm shubuh", "muslim pro"] },
+                { text: "Mendengarkan Ceramah", points: 25, aliases: ["youtube dakwah", "podcast islam", "kajian online", "ngaji online"] },
+                { text: "Donasi / Zakat Online", points: 20, aliases: ["sedekah online", "transfer masjid", "kitabisa"] },
+                { text: "Grup Silaturahmi", points: 15, aliases: ["grup wa keluarga", "grup remaja masjid", "komunikasi"] },
+                { text: "Belajar Ilmu Agama", points: 10, aliases: ["cari hadis", "baca artikel islam", "googling hukum islam"] }
+            ]}
+        ];
+
+        // --- 2. GAME STATE ---
+        let questions = [];
+        let gameState = {
+            teamA: { name: "TIM A", score: 0 },
+            teamB: { name: "TIM B", score: 0 },
+            activeQuestion: null,
+            multiplier: 1,
+            strikes: 0,
+            roundPoints: 0,
+            revealedIndices: [],
+            isStealMode: false,
+            audioEnabled: true
+        };
+        
+        let timerInterval;
+        let timeLeft = 30;
+        let isTimerRunning = false;
+        
+        // --- STREAMING_CHUNK:Audio Synthesizer setup... ---
+        // --- 3. WEB AUDIO API SYNTHESIZER ---
+        const AudioContext = window.AudioContext || window.webkitAudioContext;
+        let audioCtx;
+
+        function initAudio() {
+            if (!audioCtx) {
+                audioCtx = new AudioContext();
+            }
+            if (audioCtx.state === 'suspended') {
+                audioCtx.resume();
+            }
+        }
+
+        function toggleAudio() {
+            gameState.audioEnabled = !gameState.audioEnabled;
+            const btn = document.getElementById('btn-audio');
+            btn.innerHTML = gameState.audioEnabled ? '🔊' : '🔇';
+            if (gameState.audioEnabled) initAudio();
+        }
+
+        function playSound(type) {
+            if (!gameState.audioEnabled) return;
+            initAudio();
+            
+            const osc = audioCtx.createOscillator();
+            const gainNode = audioCtx.createGain();
+            osc.connect(gainNode);
+            gainNode.connect(audioCtx.destination);
+
+            const now = audioCtx.currentTime;
+
+            if (type === 'correct') {
+                osc.type = 'sine';
+                osc.frequency.setValueAtTime(800, now);
+                osc.frequency.exponentialRampToValueAtTime(1200, now + 0.1);
+                gainNode.gain.setValueAtTime(0, now);
+                gainNode.gain.linearRampToValueAtTime(0.5, now + 0.05);
+                gainNode.gain.exponentialRampToValueAtTime(0.01, now + 0.5);
+                osc.start(now);
+                osc.stop(now + 0.5);
+            } 
+            else if (type === 'wrong') {
+                osc.type = 'sawtooth';
+                osc.frequency.setValueAtTime(150, now);
+                osc.frequency.linearRampToValueAtTime(100, now + 0.3);
+                gainNode.gain.setValueAtTime(0, now);
+                gainNode.gain.linearRampToValueAtTime(0.5, now + 0.05);
+                gainNode.gain.exponentialRampToValueAtTime(0.01, now + 0.4);
+                osc.start(now);
+                osc.stop(now + 0.4);
+            }
+            else if (type === 'reveal') {
+                osc.type = 'triangle';
+                osc.frequency.setValueAtTime(400, now);
+                osc.frequency.linearRampToValueAtTime(800, now + 0.2);
+                gainNode.gain.setValueAtTime(0, now);
+                gainNode.gain.linearRampToValueAtTime(0.3, now + 0.1);
+                gainNode.gain.exponentialRampToValueAtTime(0.01, now + 0.3);
+                osc.start(now);
+                osc.stop(now + 0.3);
+            }
+            else if (type === 'tick') {
+                osc.type = 'square';
+                osc.frequency.setValueAtTime(1000, now);
+                gainNode.gain.setValueAtTime(0.1, now);
+                gainNode.gain.exponentialRampToValueAtTime(0.01, now + 0.05);
+                osc.start(now);
+                osc.stop(now + 0.05);
+            }
+            else if (type === 'timeout') {
+                osc.type = 'sawtooth';
+                osc.frequency.setValueAtTime(200, now);
+                osc.frequency.exponentialRampToValueAtTime(50, now + 1);
+                gainNode.gain.setValueAtTime(0.5, now);
+                gainNode.gain.exponentialRampToValueAtTime(0.01, now + 1);
+                osc.start(now);
+                osc.stop(now + 1);
+            }
+        }
+
+        // --- STREAMING_CHUNK:Core UI and Navigation functions... ---
+        // --- 4. UI NAVIGATION ---
+        function showScreen(screenId) {
+            document.querySelectorAll('body > div[id^="screen-"]').forEach(el => el.classList.add('hidden'));
+            document.getElementById(screenId).classList.remove('hidden');
+            document.getElementById(screenId).classList.add('flex');
+            
+            if (screenId === 'screen-setup') {
+                populateSetupQuestions();
+            } else if (screenId === 'screen-manage') {
+                renderQuestionManagerList();
+            }
+        }
+
+        function openModal(modalId) {
+            document.getElementById(modalId).classList.add('active');
+            if(modalId === 'modal-manual-correct') {
+                buildManualCorrectButtons();
+            }
+        }
+
+        function closeModal(modalId) {
+            document.getElementById(modalId).classList.remove('active');
+        }
+
+        function toggleFullscreen() {
+            if (!document.fullscreenElement) {
+                document.documentElement.requestFullscreen().catch(err => {
+                    console.log(`Error attempting to enable fullscreen: ${err.message}`);
+                });
+            } else {
+                if (document.exitFullscreen) {
+                    document.exitFullscreen();
+                }
+            }
+        }
+
+        // --- STREAMING_CHUNK:Data Management functions... ---
+        // --- 5. DATA MANAGEMENT (LocalStorage) ---
+        function loadQuestions() {
+            const saved = localStorage.getItem('family100_pai_questions');
+            if (saved) {
+                questions = JSON.parse(saved);
+            } else {
+                resetDefaultQuestions(false);
+            }
+        }
+
+        function saveQuestionsToLocal() {
+            localStorage.setItem('family100_pai_questions', JSON.stringify(questions));
+        }
+
+        function resetDefaultQuestions(confirmFirst = true) {
+            if (confirmFirst && !confirm("Anda yakin ingin mengembalikan bank soal ke bawaan awal? Soal yang Anda buat akan hilang.")) return;
+            questions = JSON.parse(JSON.stringify(defaultQuestions));
+            saveQuestionsToLocal();
+            if(confirmFirst) renderQuestionManagerList();
+        }
+
+        function exportQuestions() {
+            const dataStr = "data:text/json;charset=utf-8," + encodeURIComponent(JSON.stringify(questions, null, 2));
+            const dlAnchorElem = document.createElement('a');
+            dlAnchorElem.setAttribute("href", dataStr);
+            dlAnchorElem.setAttribute("download", "bank_soal_family100_pai.json");
+            dlAnchorElem.click();
+        }
+
+        function importQuestions(event) {
+            const file = event.target.files[0];
+            if (!file) return;
+            const reader = new FileReader();
+            reader.onload = function(e) {
+                try {
+                    const imported = JSON.parse(e.target.result);
+                    if (Array.isArray(imported) && imported.length > 0 && imported[0].question) {
+                        questions = imported;
+                        saveQuestionsToLocal();
+                        renderQuestionManagerList();
+                        alert("Bank soal berhasil diimpor!");
+                    } else {
+                        alert("Format JSON tidak valid untuk aplikasi ini.");
+                    }
+                } catch (err) {
+                    alert("Gagal membaca file JSON.");
+                }
+            };
+            reader.readAsText(file);
+            event.target.value = ''; // Reset input
+        }
+
+        // --- STREAMING_CHUNK:Game Logic - Setup and Board Rendering... ---
+        // --- 6. GAME LOGIC: SETUP & BOARD ---
+        function populateSetupQuestions() {
+            const select = document.getElementById('select-question');
+            select.innerHTML = '';
+            questions.forEach((q, index) => {
+                const opt = document.createElement('option');
+                opt.value = index;
+                opt.textContent = `${q.category ? '['+q.category+'] ' : ''}${q.question.substring(0, 50)}...`;
+                select.appendChild(opt);
+            });
+        }
+
+        function startGame() {
+            initAudio(); // Initialize audio on first real interaction
+            const teamAInput = document.getElementById('input-team-a').value || 'TIM A';
+            const teamBInput = document.getElementById('input-team-b').value || 'TIM B';
+            const mult = parseInt(document.getElementById('select-multiplier').value) || 1;
+            const qIndex = parseInt(document.getElementById('select-question').value);
+
+            if (isNaN(qIndex) || !questions[qIndex]) {
+                alert("Pilih pertanyaan terlebih dahulu!");
+                return;
+            }
+
+            gameState.teamA.name = teamAInput;
+            gameState.teamB.name = teamBInput;
+            gameState.multiplier = mult;
+            gameState.activeQuestion = JSON.parse(JSON.stringify(questions[qIndex])); // Deep copy
+            gameState.strikes = 0;
+            gameState.roundPoints = 0;
+            gameState.revealedIndices = [];
+            gameState.isStealMode = false;
+            
+            // Sort answers by points descending just in case
+            gameState.activeQuestion.answers.sort((a, b) => b.points - a.points);
+
+            updateScoreDisplay();
+            
+            document.getElementById('display-round-info').textContent = `RONDE ${mult} (×${mult})`;
+            document.getElementById('display-question').textContent = gameState.activeQuestion.question;
+            document.getElementById('round-points').textContent = '0';
+            
+            resetTimer();
+            buildBoard();
+            resetStrikes();
+            closeStealOverlay();
+            
+            document.getElementById('answer-input').value = '';
+            showScreen('screen-game');
+            document.getElementById('answer-input').focus();
+        }
+
+        function buildBoard() {
+            const board = document.getElementById('answers-board');
+            board.innerHTML = '';
+            const ansCount = gameState.activeQuestion.answers.length;
+            
+            for (let i = 0; i < ansCount; i++) {
+                const isRevealed = gameState.revealedIndices.includes(i);
+                const ans = gameState.activeQuestion.answers[i];
+                
+                const card = document.createElement('div');
+                card.className = `card-container ${isRevealed ? 'revealed' : ''}`;
+                card.id = `card-${i}`;
+                
+                card.innerHTML = `
+                    <div class="card-inner">
+                        <div class="card-front text-shadow">
+                            ${i + 1}
+                        </div>
+                        <div class="card-back">
+                            <span class="ans-text">${ans.text}</span>
+                            <span class="ans-points">${ans.points}</span>
+                        </div>
+                    </div>
+                `;
+                board.appendChild(card);
+            }
+        }
+
+        // --- STREAMING_CHUNK:Game Logic - Checking Answers and Scoring... ---
+        // --- 7. GAME LOGIC: CHECKING & SCORING ---
+        function checkAnswer() {
+            if (gameState.strikes >= 3 && !gameState.isStealMode) return;
+            
+            const inputEl = document.getElementById('answer-input');
+            let input = inputEl.value.trim().toLowerCase();
+            if (!input) return;
+
+            // Remove punctuation for easier matching
+            input = input.replace(/[^\w\s]/gi, '');
+
+            let foundIndex = -1;
+            
+            for (let i = 0; i < gameState.activeQuestion.answers.length; i++) {
+                if (gameState.revealedIndices.includes(i)) continue; // Already revealed
+
+                const ans = gameState.activeQuestion.answers[i];
+                const mainText = ans.text.toLowerCase().replace(/[^\w\s]/gi, '');
+                
+                // Exact or Substring match on main text
+                if (mainText === input || mainText.includes(input) || input.includes(mainText)) {
+                    foundIndex = i;
+                    break;
+                }
+                
+                // Check aliases
+                if (ans.aliases && Array.isArray(ans.aliases)) {
+                    for (let a of ans.aliases) {
+                        const alias = a.toLowerCase().replace(/[^\w\s]/gi, '');
+                        if (alias === input || alias.includes(input) || input.includes(alias)) {
+                            foundIndex = i;
+                            break;
+                        }
+                    }
+                }
+                if (foundIndex !== -1) break;
+            }
+
+            inputEl.value = ''; // clear input
+
+            if (foundIndex !== -1) {
+                revealAnswer(foundIndex);
+                if(gameState.isStealMode) {
+                    alert("Jawaban Benar! Silakan berikan poin ke tim yang merebut.");
+                }
+            } else {
+                triggerStrike();
+            }
+            inputEl.focus();
+        }
+
+        function revealAnswer(index) {
+            if (gameState.revealedIndices.includes(index)) return;
+            
+            gameState.revealedIndices.push(index);
+            const card = document.getElementById(`card-${index}`);
+            card.classList.add('revealed');
+            
+            playSound('correct');
+            setTimeout(() => playSound('reveal'), 300);
+
+            // Add points
+            const pts = gameState.activeQuestion.answers[index].points * gameState.multiplier;
+            gameState.roundPoints += pts;
+            
+            // Animate round points
+            const rpEl = document.getElementById('round-points');
+            rpEl.textContent = gameState.roundPoints;
+            rpEl.classList.add('scale-150', 'text-green-400');
+            setTimeout(() => rpEl.classList.remove('scale-150', 'text-green-400'), 300);
+
+            closeModal('modal-manual-correct');
+            
+            // Check if all revealed (optional auto-end round logic can go here)
+        }
+
+        // --- STREAMING_CHUNK:Game Logic - Strikes and Steals... ---
+        // --- 8. GAME LOGIC: STRIKES & STEAL ---
+        function triggerStrike() {
+            if (gameState.isStealMode) {
+                playSound('wrong');
+                alert("Rebutan Gagal! Poin tetap milik tim awal. Silakan akhiri ronde.");
+                document.getElementById('steal-overlay').classList.add('hidden');
+                document.getElementById('steal-controls').classList.add('hidden');
+                return;
+            }
+
+            if (gameState.strikes >= 3) return;
+            
+            gameState.strikes++;
+            playSound('wrong');
+            
+            const overlay = document.getElementById('strike-overlay');
+            overlay.innerHTML = '';
+            for(let i=0; i<gameState.strikes; i++){
+                overlay.innerHTML += `<div class="strike-mark">X</div>`;
+            }
+            
+            overlay.classList.add('show');
+            setTimeout(() => {
+                overlay.classList.remove('show');
+                if (gameState.strikes === 3) {
+                    initiateSteal();
+                }
+            }, 1500);
+        }
+
+        function initiateSteal() {
+            gameState.isStealMode = true;
+            document.getElementById('steal-overlay').classList.remove('hidden');
+            document.getElementById('steal-overlay').classList.add('flex');
+            document.getElementById('steal-controls').classList.remove('hidden');
+            playSound('wrong'); // sound indicating trouble
+        }
+
+        function closeStealOverlay() {
+            document.getElementById('steal-overlay').classList.add('hidden');
+            document.getElementById('steal-overlay').classList.remove('flex');
+            document.getElementById('answer-input').focus();
+        }
+
+        function resetStrikes() {
+            gameState.strikes = 0;
+            document.getElementById('strike-overlay').innerHTML = '';
+            document.getElementById('steal-controls').classList.add('hidden');
+        }
+
+        // --- 9. MANUAL CONTROLS & SCORING ---
+        function buildManualCorrectButtons() {
+            const container = document.getElementById('manual-correct-buttons');
+            container.innerHTML = '';
+            gameState.activeQuestion.answers.forEach((ans, i) => {
+                const btn = document.createElement('button');
+                const isRev = gameState.revealedIndices.includes(i);
+                btn.className = `btn p-3 rounded-lg font-bold text-left border-2 ${isRev ? 'bg-gray-700 text-gray-500 border-gray-600 cursor-not-allowed' : 'bg-slate-700 hover:bg-slate-600 text-white border-slate-500'}`;
+                btn.innerHTML = `<span class="inline-block w-6 h-6 bg-blue-600 text-center rounded mr-2">${i+1}</span> ${ans.text}`;
+                if (!isRev) {
+                    btn.onclick = () => revealAnswer(i);
+                }
+                container.appendChild(btn);
+            });
+        }
+
+        function adjustScore(team, amount) {
+            if (team === 'A') gameState.teamA.score += amount;
+            if (team === 'B') gameState.teamB.score += amount;
+            updateScoreDisplay();
+        }
+
+        function awardRoundPoints(team) {
+            if (gameState.roundPoints === 0) {
+                alert("Belum ada poin yang terkumpul di ronde ini.");
+                return;
+            }
+            adjustScore(team, gameState.roundPoints);
+            gameState.roundPoints = 0;
+            document.getElementById('round-points').textContent = '0';
+            playSound('correct');
+            alert(`Poin ronde diberikan ke TIM ${team}`);
+            document.getElementById('steal-controls').classList.add('hidden');
+        }
+
+        function updateScoreDisplay() {
+            document.getElementById('display-team-a-name').textContent = gameState.teamA.name;
+            document.getElementById('display-team-b-name').textContent = gameState.teamB.name;
+            document.getElementById('display-score-a').textContent = gameState.teamA.score;
+            document.getElementById('display-score-b').textContent = gameState.teamB.score;
+        }
+
+        // --- STREAMING_CHUNK:Timer Logic... ---
+        // --- 10. TIMER LOGIC ---
+        function startTimer() {
+            if (isTimerRunning) return;
+            isTimerRunning = true;
+            timerInterval = setInterval(() => {
+                timeLeft--;
+                updateTimerDisplay();
+                if(timeLeft <= 5 && timeLeft > 0) playSound('tick');
+                if (timeLeft <= 0) {
+                    clearInterval(timerInterval);
+                    isTimerRunning = false;
+                    playSound('timeout');
+                    document.getElementById('timer-display').classList.add('text-red-500', 'animate-pulse');
+                }
+            }, 1000);
+        }
+
+        function pauseTimer() {
+            clearInterval(timerInterval);
+            isTimerRunning = false;
+        }
+
+        function resetTimer() {
+            pauseTimer();
+            const setting = document.getElementById('timer-setting').value;
+            timeLeft = parseInt(setting);
+            updateTimerDisplay();
+            document.getElementById('timer-display').classList.remove('text-red-500', 'animate-pulse');
+        }
+
+        function updateTimerDisplay() {
+            const m = Math.floor(timeLeft / 60).toString().padStart(2, '0');
+            const s = (timeLeft % 60).toString().padStart(2, '0');
+            document.getElementById('timer-display').textContent = `${m}:${s}`;
+        }
+
+        // --- STREAMING_CHUNK:End Game and Keyboard Shortcuts... ---
+        // --- 11. END GAME LOGIC ---
+        function endGame() {
+            const scoreA = gameState.teamA.score;
+            const scoreB = gameState.teamB.score;
+            
+            let champName = "SERI";
+            let champScore = scoreA;
+            let runName = "-";
+            let runScore = 0;
+
+            if (scoreA > scoreB) {
+                champName = gameState.teamA.name; champScore = scoreA;
+                runName = gameState.teamB.name; runScore = scoreB;
+            } else if (scoreB > scoreA) {
+                champName = gameState.teamB.name; champScore = scoreB;
+                runName = gameState.teamA.name; runScore = scoreA;
+            }
+
+            document.getElementById('champ-name').textContent = champName;
+            document.getElementById('champ-score').textContent = champScore;
+            
+            if(champName === "SERI") {
+                document.getElementById('winner-runnerup').classList.add('hidden');
+            } else {
+                document.getElementById('winner-runnerup').classList.remove('hidden');
+                document.getElementById('runnerup-name').textContent = runName;
+                document.getElementById('runnerup-score').textContent = runScore;
+            }
+
+            openModal('modal-winner');
+            playSound('correct');
+        }
+
+        function resetFullGame() {
+            gameState.teamA.score = 0;
+            gameState.teamB.score = 0;
+            closeModal('modal-winner');
+            showScreen('screen-setup');
+        }
+
+        // --- 12. KEYBOARD SHORTCUTS ---
+        document.addEventListener('keydown', (e) => {
+            const activeScreen = document.querySelector('body > div[id^="screen-"]:not(.hidden)').id;
+            
+            // Only apply shortcuts in game screen and if not typing in input (except Enter)
+            if (activeScreen === 'screen-game') {
+                const isTyping = document.activeElement === document.getElementById('answer-input');
+
+                if (e.key === 'Enter' && isTyping) {
+                    checkAnswer();
+                } else if (!isTyping) {
+                    if (e.key.toLowerCase() === 'x') {
+                        triggerStrike();
+                    } else if (e.key === ' ') {
+                        e.preventDefault();
+                        isTimerRunning ? pauseTimer() : startTimer();
+                    } else if (e.key >= '1' && e.key <= '8') {
+                        const idx = parseInt(e.key) - 1;
+                        if (gameState.activeQuestion && idx < gameState.activeQuestion.answers.length) {
+                            revealAnswer(idx);
+                        }
+                    }
+                }
+            }
+        });
+
+        // --- STREAMING_CHUNK:Question Editor Logic... ---
+        // --- 13. QUESTION EDITOR LOGIC ---
+        let editCurrentIndex = -1;
+
+        function renderQuestionManagerList() {
+            const list = document.getElementById('question-list');
+            list.innerHTML = '';
+            questions.forEach((q, index) => {
+                const btn = document.createElement('button');
+                btn.className = 'w-full text-left p-3 rounded bg-gray-800 hover:bg-gray-700 border-l-4 border-blue-500 mb-2 text-sm';
+                btn.innerHTML = `<div class="font-bold text-yellow-400 mb-1">${q.category || 'Umum'}</div>
+                                 <div class="truncate">${q.question}</div>`;
+                btn.onclick = () => loadQuestionIntoEditor(index);
+                list.appendChild(btn);
+            });
+        }
+
+        function loadQuestionIntoEditor(index) {
+            editCurrentIndex = index;
+            const q = questions[index];
+            
+            document.getElementById('editor-empty').classList.add('hidden');
+            document.getElementById('editor-form').classList.remove('hidden');
+            document.getElementById('editor-form').classList.add('flex');
+            
+            document.getElementById('edit-id').value = index;
+            document.getElementById('edit-question').value = q.question;
+            document.getElementById('edit-category').value = q.category || '';
+            
+            const ansList = document.getElementById('answers-editor-list');
+            ansList.innerHTML = '';
+            q.answers.forEach((ans, i) => addAnswerRowUI(ans.text, ans.points, ans.aliases.join(', ')));
+        }
+
+        function createNewQuestion() {
+            editCurrentIndex = -1;
+            document.getElementById('editor-empty').classList.add('hidden');
+            document.getElementById('editor-form').classList.remove('hidden');
+            document.getElementById('editor-form').classList.add('flex');
+            
+            document.getElementById('edit-id').value = '';
+            document.getElementById('edit-question').value = '';
+            document.getElementById('edit-category').value = '';
+            document.getElementById('answers-editor-list').innerHTML = '';
+            
+            // Add 3 default rows
+            for(let i=0; i<3; i++) addAnswerRowUI('', 10, '');
+        }
+
+        function addAnswerRowUI(text = '', points = 10, aliases = '') {
+            const list = document.getElementById('answers-editor-list');
+            if (list.children.length >= 8) {
+                alert("Maksimal 8 jawaban!");
+                return;
+            }
+            
+            const row = document.createElement('div');
+            row.className = 'answer-row bg-gray-800 p-3 rounded-lg border border-gray-600 flex flex-col gap-2 relative';
+            row.innerHTML = `
+                <button onclick="this.parentElement.remove()" class="absolute top-2 right-2 text-red-500 hover:text-red-400 font-bold" title="Hapus Jawaban">✕</button>
+                <div class="flex gap-2 w-full pr-6">
+                    <input type="text" placeholder="Teks Jawaban" value="${text}" class="edit-ans-text flex-grow p-2 rounded text-black text-sm">
+                    <input type="number" placeholder="Poin" value="${points}" class="edit-ans-points w-20 p-2 rounded text-black text-sm text-center">
+                </div>
+                <input type="text" placeholder="Alias/Kata kunci alternatif (pisahkan dengan koma)" value="${aliases}" class="edit-ans-aliases w-full p-2 rounded text-black text-xs bg-gray-200">
+            `;
+            list.appendChild(row);
+        }
+
+        function addAnswerRow() {
+            addAnswerRowUI();
+        }
+
+        function saveQuestion() {
+            const qText = document.getElementById('edit-question').value.trim();
+            const qCat = document.getElementById('edit-category').value.trim();
+            
+            if(!qText) { alert("Pertanyaan tidak boleh kosong!"); return; }
+
+            const rows = document.querySelectorAll('.answer-row');
+            if(rows.length === 0) { alert("Minimal harus ada 1 jawaban!"); return; }
+
+            let answers = [];
+            rows.forEach(row => {
+                const text = row.querySelector('.edit-ans-text').value.trim();
+                const points = parseInt(row.querySelector('.edit-ans-points').value) || 0;
+                const aliasesStr = row.querySelector('.edit-ans-aliases').value;
+                const aliases = aliasesStr.split(',').map(a => a.trim()).filter(a => a !== '');
+                
+                if(text) {
+                    answers.push({ text, points, aliases });
+                }
+            });
+
+            if(answers.length === 0) { alert("Isi minimal 1 teks jawaban!"); return; }
+
+            const newQ = { question: qText, category: qCat, answers: answers };
+
+            if(editCurrentIndex === -1) {
+                questions.push(newQ);
+            } else {
+                questions[editCurrentIndex] = newQ;
+            }
+
+            saveQuestionsToLocal();
+            renderQuestionManagerList();
+            alert("Soal berhasil disimpan!");
+        }
+
+        function deleteCurrentQuestion() {
+            if(editCurrentIndex === -1) return;
+            if(confirm("Yakin ingin menghapus soal ini?")) {
+                questions.splice(editCurrentIndex, 1);
+                saveQuestionsToLocal();
+                renderQuestionManagerList();
+                document.getElementById('editor-form').classList.add('hidden');
+                document.getElementById('editor-empty').classList.remove('hidden');
+            }
+        }
+
+        // --- INIT ---
+        window.onload = () => {
+            loadQuestions();
+        };
+
+    </script>
+</body>
+</html>
